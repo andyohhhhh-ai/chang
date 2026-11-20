@@ -16,3 +16,23 @@ jobs:
           name: chang-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: chang-debug-apk
+          path: dist
+      - name: Publish APK to GitHub Releases
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: v1.0.0
+          name: 长图助手 v1.0.0
+          body: Android 安装包。下载 app-debug.apk 后在手机上打开安装。
+          files: dist/app-debug.apk
+          overwrite_files: true
+          make_latest: true
