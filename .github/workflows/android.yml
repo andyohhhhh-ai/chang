@@ -13,8 +13,8 @@ jobs:
       - run: gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: chang-longshot-3
-          path: app/build/outputs/apk/debug/chang-longshot-3.apk
+          name: chang-longshot-4
+          path: app/build/outputs/apk/debug/chang-longshot-4.apk
           retention-days: 30
   publish:
     needs: build
@@ -25,14 +25,14 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: chang-longshot-3
+          name: chang-longshot-4
           path: dist
       - name: Publish APK to GitHub Releases
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          tag_name: v1.0.3
-          name: 长图助手 v1.0.3
-          body: 第三版：修复状态栏和底部系统栏避让，升级玻璃质感按钮与版面。下载 chang-longshot-3.apk 安装。
-          files: dist/chang-longshot-3.apk
+          tag_name: v1.0.4
+          name: 长图助手 v1.0.4
+          body: 第四版：按钮升级为胶囊形液态玻璃风格。下载 chang-longshot-4.apk 安装。
+          files: dist/chang-longshot-4.apk
           overwrite_files: true
           make_latest: true
