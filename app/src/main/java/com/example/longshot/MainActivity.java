@@ -9,7 +9,30 @@ public class MainActivity extends Activity {
  void home(){LinearLayout root=new LinearLayout(this);root.setOrientation(1);root.setPadding(24,32,24,16);root.setBackgroundColor(0xfff8f9fc);setContentView(root);root.addView(label("长图助手",30,0xff182230));root.addView(label("选图后自动排序、去重拼接，生成前可预览",15,0xff687386));Button pick=new Button(this);pick.setText("选择多张截图");root.addView(pick);pick.setOnClickListener(v->{Intent i=new Intent("android.intent.action.OPEN_DOCUMENT");i.setType("image/*");i.putExtra("android.intent.extra.ALLOW_MULTIPLE",true);i.addCategory("android.intent.category.OPENABLE");startActivityForResult(i,1);});status=label("支持相册多选。长按缩略图可拖动排序。",15,0xff475467);root.addView(status);list=new LinearLayout(this);list.setOrientation(1);ScrollView sc=new ScrollView(this);sc.addView(list);root.addView(sc,new LinearLayout.LayoutParams(-1,0,1));Button preview=new Button(this);preview.setText("预览拼接效果");root.addView(preview);preview.setOnClickListener(v->preview());}
  protected void onActivityResult(int r,int c,Intent d){super.onActivityResult(r,c,d);if(r!=1||c!=RESULT_OK||d==null)return;images.clear();try{if(d.getClipData()!=null){for(int n=0;n<d.getClipData().getItemCount();n++)add(d.getClipData().getItemAt(n).getUri());}else if(d.getData()!=null)add(d.getData());}catch(Exception e){status.setText("读取图片失败");}autoOrder();show();}
  void add(Uri u)throws Exception{getContentResolver().takePersistableUriPermission(u,Intent.FLAG_GRANT_READ_URI_PERMISSION);BitmapFactory.Options o=new BitmapFactory.Options();o.inSampleSize=1;images.add(BitmapFactory.decodeStream(getContentResolver().openInputStream(u),null,o));}
- int similarity(Bitmap a,Bitmap b){if(a==null||b==null)return 0;int w=32,max=Math.min(a.getHeight(),b.getHeight())/2,best=0,be=Integer.MAX_VALUE;for(int k=Math.max(8,max/16);k<=max;k+=Math.max(4,max/30)){int err=0;for(int x=0;x<w;x++){int ax=x*a.getWidth()/w,bx=x*b.getWidth()/w;for(int dy=0;dy<8;dy++){int p=a.getPixel(ax,a.getHeight()-k+dy*k/8),q=b.getPixel(bx,dy*k/8);err+=Math.abs(Color.red(p)-Color.red(q))+Math.abs(Color.green(p)-Color.green(q))+Math.abs(Color.blue(p)-Color.blue(q));}}if(err<be){be=err;best=k;}}return best;}
+ int similarity(Bitmap a,Bitmap b){
+  if(a==null||b==null)return 0;
+  int w=48,limit=Math.min(a.getHeight(),b.getHeight())*2/5,min=24;
+  if(limit<min)return 0;
+  double best=Double.MAX_VALUE;int bestK=0;
+  for(int k=min;k<=limit;k+=Math.max(2,limit/50)){
+   double color=0,edge=0;int n=0;
+   for(int yi=0;yi<20;yi++){int y=yi*(k-1)/19;
+    for(int xi=0;xi<w;xi+=2){int x=xi;
+     int ax=x*a.getWidth()/w,bx=x*b.getWidth()/w;
+     int p=a.getPixel(ax,a.getHeight()-k+y),q=b.getPixel(bx,y);
+     color+=Math.abs(Color.red(p)-Color.red(q))+Math.abs(Color.green(p)-Color.green(q))+Math.abs(Color.blue(p)-Color.blue(q));
+     int ax2=Math.min(a.getWidth()-1,ax+Math.max(1,a.getWidth()/w)),bx2=Math.min(b.getWidth()-1,bx+Math.max(1,b.getWidth()/w));
+     int p2=a.getPixel(ax2,a.getHeight()-k+y),q2=b.getPixel(bx2,y);
+     edge+=Math.abs((Color.red(p2)-Color.red(p))-(Color.red(q2)-Color.red(q)))+Math.abs((Color.green(p2)-Color.green(p))-(Color.green(q2)-Color.green(q)))+Math.abs((Color.blue(p2)-Color.blue(p))-(Color.blue(q2)-Color.blue(q)));
+     n++;
+    }
+   }
+   double score=(color+edge*0.7)/(n*3.0)+3.0*k/limit;
+   if(score<best){best=score;bestK=k;}
+  }
+  // Only trim when both colors and text/edge patterns agree; ambiguous pairs stay intact.
+  return best<20.0?bestK:0;
+ }
  void autoOrder(){if(images.size()<2)return;ArrayList<Bitmap> src=new ArrayList<>(images),out=new ArrayList<>();int start=0,bestEnd=Integer.MAX_VALUE;for(int i=0;i<src.size();i++){int incoming=0;for(int j=0;j<src.size();j++)if(i!=j)incoming+=similarity(src.get(j),src.get(i));if(incoming<bestEnd){bestEnd=incoming;start=i;}}out.add(src.remove(start));joins.clear();while(!src.isEmpty()){Bitmap tail=out.get(out.size()-1);int bi=0,bk=0;for(int i=0;i<src.size();i++){int k=similarity(tail,src.get(i));if(k>bk){bk=k;bi=i;}}out.add(src.remove(bi));joins.add(bk);}images=out;status.setText("已按相似内容估算顺序 · 长按可拖动微调");}
  void show(){list.removeAllViews();for(int i=0;i<images.size();i++){final int ix=i;LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(8,8,8,8);row.setBackgroundColor(-1);row.setTag(i);TextView num=label(String.valueOf(i+1),20,0xff2563eb);row.addView(num);ImageView iv=new ImageView(this);iv.setImageBitmap(images.get(i));iv.setScaleType(ImageView.ScaleType.CENTER_CROP);row.addView(iv,new LinearLayout.LayoutParams(0,150,1));row.setOnLongClickListener(v->{ClipData data=ClipData.newPlainText("index",""+ix);if(android.os.Build.VERSION.SDK_INT>=24)v.startDragAndDrop(data,new View.DragShadowBuilder(v),v,0);else v.startDrag(data,new View.DragShadowBuilder(v),v,0);return true;});row.setOnDragListener((v,e)->{if(e.getAction()==DragEvent.ACTION_DROP){int from=Integer.parseInt(e.getClipData().getItemAt(0).getText().toString()),to=(int)v.getTag();if(from>=0&&from<images.size()&&to>=0&&to<images.size()){Bitmap b=images.remove(from);images.add(to,b);show();}return true;}return true;});list.addView(row);}}
  Bitmap compose(){if(images.isEmpty())return null;int w=images.get(0).getWidth();long total=0;ArrayList<Bitmap> scaled=new ArrayList<>();joins.clear();for(int i=0;i<images.size();i++){Bitmap b=images.get(i);Bitmap s=Bitmap.createScaledBitmap(b,w,Math.max(1,b.getHeight()*w/b.getWidth()),true);scaled.add(s);int cut=i==0?0:similarity(scaled.get(i-1),s);joins.add(cut);total+=s.getHeight()-cut;}if(total>30000)throw new RuntimeException("图片太长，请分两次拼接");Bitmap result=Bitmap.createBitmap(w,(int)total,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(result);int y=0;Paint p=new Paint(3);for(int i=0;i<scaled.size();i++){Bitmap b=scaled.get(i);int cut=joins.get(i);c.drawBitmap(b,0,y-cut,p);y+=b.getHeight()-cut;}return result;}
