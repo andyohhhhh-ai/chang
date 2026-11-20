@@ -1,4 +1,4 @@
-// Version 1.0.2: sequential APK filename for easier installs.
+// Version 1.0.3: sequential APK filename for easier installs.
 plugins { id 'com.android.application' }
 
 android {
@@ -8,15 +8,15 @@ android {
   applicationId 'com.example.longshot'
   minSdk 23
   targetSdk 35
-  versionCode 3
-  versionName '1.0.2'
+  versionCode 4
+  versionName '1.0.3'
  }
 }
 
 androidComponents {
  onVariants(selector().all()) { variant ->
   variant.outputs.each { output ->
-   output.outputFileName.set("chang-longshot-2.apk")
+   output.outputFileName.set("chang-longshot-3.apk")
   }
  }
 }
