@@ -9,9 +9,12 @@ android {
   targetSdk 35
   versionCode 3
   versionName '1.0.2'
- }
- androidComponents {
-  onVariants(selector().all()) { variant ->
-   variant.outputs.each { output -> output.outputFileName = "chang-longshot-2.apk" }
+}
+
+androidComponents {
+ onVariants(selector().all()) { variant ->
+  variant.outputs.each { output ->
+   output.outputFileName = "chang-longshot-2.apk"
   }
+ }
 }
