@@ -16,7 +16,7 @@ android {
 androidComponents {
  onVariants(selector().all()) { variant ->
   variant.outputs.each { output ->
-   output.outputFileName = "chang-longshot-2.apk"
+   output.outputFileName.set("chang-longshot-2.apk")
   }
  }
 }
