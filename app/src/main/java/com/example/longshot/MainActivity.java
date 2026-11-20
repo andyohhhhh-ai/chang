@@ -1,6 +1,6 @@
 package com.example.longshot;
 
-import android.app.*;import android.os.*;import android.content.*;import android.graphics.*;import android.net.Uri;import android.provider.MediaStore;import android.view.*;import android.widget.*;import java.io.*;import java.util.*;
+import android.app.*;import android.os.*;import android.content.*;import android.graphics.*;import android.graphics.drawable.GradientDrawable;import android.net.Uri;import android.provider.MediaStore;import android.view.*;import android.widget.*;import java.io.*;import java.util.*;
 
 public class MainActivity extends Activity {
  ArrayList<Bitmap> images=new ArrayList<>(); ArrayList<Integer> joins=new ArrayList<>(); LinearLayout list; TextView status;
