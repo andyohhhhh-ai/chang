@@ -1,3 +1,4 @@
+// Version 1.0.2: sequential APK filename for easier installs.
 plugins { id 'com.android.application' }
 
 android {
